@@ -12,7 +12,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Notifier.init();
   if (!kIsWeb && Platform.isAndroid) {
-    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+    await Workmanager().initialize(callbackDispatcher);
   }
   final state = AppState();
   await state.init();
