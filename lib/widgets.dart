@@ -116,7 +116,7 @@ class PillNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onTap;
   const PillNav({super.key, required this.index, required this.onTap});
-  static const labels = ['الأسعار', 'المحوّل', 'التنبيهات', 'الإعدادات'];
+  static const labels = ['الأسعار', 'المحوّل', 'الإعدادات'];
   @override
   Widget build(BuildContext context) {
     final p = Pal.of(context);
@@ -133,7 +133,7 @@ class PillNav extends StatelessWidget {
             border: Border.all(color: p.navBg == p.card ? p.border : Colors.transparent),
           ),
           child: Row(children: [
-            for (var i = 0; i < 4; i++)
+            for (var i = 0; i < labels.length; i++)
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),

@@ -1,11 +1,19 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:workmanager/workmanager.dart';
 import 'app_state.dart';
+import 'notifications.dart';
 import 'theme.dart';
 import 'screens/shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Notifier.init();
+  if (!kIsWeb && Platform.isAndroid) {
+    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+  }
   final state = AppState();
   await state.init();
   runApp(RatesApp(state: state));
@@ -31,7 +39,6 @@ class RatesApp extends StatelessWidget {
           themeMode: state.themeMode,
           theme: buildTheme(Brightness.light),
           darkTheme: buildTheme(Brightness.dark),
-          scaffoldMessengerKey: state.messenger,
           home: Shell(state: state),
         ),
       );

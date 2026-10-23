@@ -47,36 +47,6 @@ class RatesSnapshot {
       }, DateTime.parse(j['at']));
 }
 
-class AlertRule {
-  final String id, code;
-  final RateSource source;
-  final bool above;
-  final double target;
-  bool enabled, fired;
-  AlertRule({
-    required this.id,
-    required this.code,
-    required this.source,
-    required this.above,
-    required this.target,
-    this.enabled = true,
-    this.fired = false,
-  });
-
-  bool matches(double v) => above ? v >= target : v <= target;
-
-  Map<String, dynamic> toJson() => {
-        'id': id, 'code': code, 'source': source.name, 'above': above,
-        'target': target, 'enabled': enabled, 'fired': fired,
-      };
-  factory AlertRule.fromJson(Map<String, dynamic> j) => AlertRule(
-        id: j['id'], code: j['code'],
-        source: RateSource.values.byName(j['source']),
-        above: j['above'], target: (j['target'] as num).toDouble(),
-        enabled: j['enabled'] ?? true, fired: j['fired'] ?? false,
-      );
-}
-
 String fmt(double v, [int? d]) {
   final dec = d ?? (v == v.roundToDouble() ? 0 : 2);
   final parts = v.toStringAsFixed(dec).split('.');
