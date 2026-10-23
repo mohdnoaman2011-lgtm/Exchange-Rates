@@ -1,4 +1,4 @@
-name: sudan_rates
+name: Exchange_Rates
 description: أسعار العملات مقابل الجنيه السوداني - البيانات من status.sd
 publish_to: none
 version: 1.0.0+1
