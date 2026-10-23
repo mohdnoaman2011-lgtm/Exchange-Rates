@@ -27,10 +27,13 @@ jobs:
             flutter create --org sd.rates --project-name sudan_rates .
           fi
 
-      - name: Android setup (permissions + desugaring)
+      - name: Android setup (permissions + desugaring + notification icon)
         run: python3 tool/android_setup.py
 
       - run: flutter pub get
+
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons
 
       - run: flutter build apk --release
 
