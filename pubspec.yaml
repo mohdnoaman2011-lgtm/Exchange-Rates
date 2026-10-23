@@ -17,5 +17,18 @@ dependencies:
   flutter_local_notifications: ^17.2.4
   workmanager: ^0.10.0
 
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon_fg.png"
+  remove_alpha_ios: true
+
 flutter:
   uses-material-design: true
+  assets:
+    - assets/logo.png
