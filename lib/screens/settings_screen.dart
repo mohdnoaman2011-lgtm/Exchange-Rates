@@ -14,9 +14,12 @@ class SettingsScreen extends StatelessWidget {
         listenable: state,
         builder: (context, _) {
           final p = Pal.of(context);
+          // padding.bottom يشمل أصلاً ارتفاع شريط التنقل (extendBody)
+          final bottom = MediaQuery.of(context).padding.bottom + 12;
+
           Widget row(String label, Widget trailing, {bool first = false, String? sub}) => Container(
-                constraints: const BoxConstraints(minHeight: 60),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                constraints: const BoxConstraints(minHeight: 52),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
                   border: Border(top: BorderSide(color: first ? Colors.transparent : p.divider)),
                 ),
@@ -30,6 +33,7 @@ class SettingsScreen extends StatelessWidget {
                   trailing,
                 ]),
               );
+
           Widget seg<T>(T value, List<(T, String)> items, ValueChanged<T> on) => Container(
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(color: p.tile, borderRadius: BorderRadius.circular(12)),
@@ -39,7 +43,7 @@ class SettingsScreen extends StatelessWidget {
                       onTap: () => on(v),
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        height: 34,
+                        height: 32,
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
@@ -56,16 +60,25 @@ class SettingsScreen extends StatelessWidget {
                     ),
                 ]),
               );
-          Widget sw(bool v, ValueChanged<bool> on) =>
-              Switch(value: v, onChanged: on, activeColor: Colors.white, activeTrackColor: Pal.coral);
+
+          Widget sw(bool v, ValueChanged<bool> on) => Switch(
+                value: v,
+                onChanged: on,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                activeColor: Colors.white,
+                activeTrackColor: Pal.coral,
+                inactiveThumbColor: p.muted,
+                inactiveTrackColor: p.tile,
+                trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+              );
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+            padding: EdgeInsets.fromLTRB(20, 20, 20, bottom),
             children: [
               const ScreenHeader(title: 'الإعدادات', subtitle: Text('خصّص التطبيق')),
-              const SizedBox(height: 22),
+              const SizedBox(height: 16),
               Text('تنبيهات الأسعار', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: p.muted)),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Panel(
                 child: Column(children: [
                   row('تنبيه عند ارتفاع السعر', sw(state.notifyRise, state.setRise),
@@ -75,6 +88,10 @@ class SettingsScreen extends StatelessWidget {
                   row(
                     'تجربة الإشعار',
                     TextButton(
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(48, 36),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                       onPressed: () async {
                         await Notifier.requestPermission();
                         await Notifier.show('تجربة الإشعار', 'هكذا ستظهر تنبيهات الأسعار');
@@ -84,13 +101,14 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ]),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'تصلك الإشعارات حتى والتطبيق مغلق (فحص كل 15 دقيقة تقريباً على أندرويد). '
-                'المقارنة تتم بحسب المصدر الافتراضي أدناه.',
-                style: TextStyle(fontSize: 12, height: 1.5, color: p.muted),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+                child: Text(
+                  'تصلك الإشعارات والتطبيق مغلق (فحص كل 15 دقيقة تقريباً على أندرويد)، وتُقارن بحسب المصدر الافتراضي.',
+                  style: TextStyle(fontSize: 12, height: 1.5, color: p.muted),
+                ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               Panel(
                 child: Column(children: [
                   row(
@@ -110,12 +128,25 @@ class SettingsScreen extends StatelessWidget {
                       state.setSource,
                     ),
                   ),
-                  row('التحديث التلقائي', sw(state.autoRefresh, state.setAuto)),
                   row(
-                    'تحديث الآن',
-                    state.loading
-                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Pal.coral))
-                        : IconButton(onPressed: state.refresh, icon: Icon(Icons.refresh_rounded, color: p.muted)),
+                    'التحديث التلقائي',
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      state.loading
+                          ? const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: SizedBox(
+                                width: 20, height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Pal.coral),
+                              ),
+                            )
+                          : IconButton(
+                              tooltip: 'تحديث الآن',
+                              onPressed: state.refresh,
+                              icon: Icon(Icons.refresh_rounded, color: p.muted),
+                            ),
+                      sw(state.autoRefresh, state.setAuto),
+                    ]),
+                    sub: 'كل دقيقة أثناء فتح التطبيق',
                   ),
                   row('الإصدار', Num('v1.0', style: TextStyle(fontSize: 14, color: p.muted))),
                 ]),
