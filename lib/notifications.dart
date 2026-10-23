@@ -58,7 +58,6 @@ class Notifier {
         _uniqueName,
         _task,
         frequency: const Duration(minutes: 15),
-        existingWorkPolicy: ExistingWorkPolicy.keep,
         constraints: Constraints(networkType: NetworkType.connected),
       );
     } else {
