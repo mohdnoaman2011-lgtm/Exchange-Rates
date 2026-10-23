@@ -17,6 +17,8 @@ class AppState extends ChangeNotifier {
   RateSource source = RateSource.parallel;
   ThemeMode themeMode = ThemeMode.dark;
   bool autoRefresh = true;
+  bool notifyRise = true;
+  bool notifyFall = true;
   List<AlertRule> alerts = [];
   Map<String, List<double>> history = {};
 
@@ -28,6 +30,8 @@ class AppState extends ChangeNotifier {
     source = RateSource.values.byName(_p.getString('source') ?? 'parallel');
     themeMode = ThemeMode.values.byName(_p.getString('theme') ?? 'dark');
     autoRefresh = _p.getBool('auto') ?? true;
+    notifyRise = _p.getBool('rise') ?? true;
+    notifyFall = _p.getBool('fall') ?? true;
     final s = _p.getString('snapshot');
     if (s != null) snapshot = RatesSnapshot.fromJson(jsonDecode(s));
     final a = _p.getString('alerts');
@@ -51,9 +55,11 @@ class AppState extends ChangeNotifier {
     loading = true;
     notifyListeners();
     try {
+      final old = snapshot;
       snapshot = await _service.fetch();
       error = null;
       _record();
+      _checkMoves(old, snapshot!);
       _checkAlerts();
       _p.setString('snapshot', jsonEncode(snapshot!.toJson()));
     } catch (e) {
@@ -73,6 +79,24 @@ class AppState extends ChangeNotifier {
       }
     }
     _p.setString('history', jsonEncode(history));
+  }
+
+  /// تنبيه عند ارتفاع أو نزول أي عملة مقارنةً بآخر تحديث
+  void _checkMoves(RatesSnapshot? old, RatesSnapshot now) {
+    if (old == null || (!notifyRise && !notifyFall)) return;
+    final lines = <String>[];
+    for (final r in now.rates.values) {
+      final o = old.rates[r.code];
+      if (o == null) continue;
+      final a = o.value(source), b = r.value(source);
+      if (b > a && notifyRise) lines.add('▲ ${nameOf(r.code)} ارتفع من ${fmt(a)} إلى ${fmt(b)}');
+      if (b < a && notifyFall) lines.add('▼ ${nameOf(r.code)} نزل من ${fmt(a)} إلى ${fmt(b)}');
+    }
+    if (lines.isEmpty) return;
+    messenger.currentState?.showSnackBar(SnackBar(
+      duration: const Duration(seconds: 6),
+      content: Text(lines.take(4).join('\n')),
+    ));
   }
 
   void _checkAlerts() {
@@ -98,6 +122,8 @@ class AppState extends ChangeNotifier {
   void setSource(RateSource s) { source = s; _p.setString('source', s.name); notifyListeners(); }
   void setTheme(ThemeMode m) { themeMode = m; _p.setString('theme', m.name); notifyListeners(); }
   void toggleTheme(bool isDark) => setTheme(isDark ? ThemeMode.light : ThemeMode.dark);
+  void setRise(bool v) { notifyRise = v; _p.setBool('rise', v); notifyListeners(); }
+  void setFall(bool v) { notifyFall = v; _p.setBool('fall', v); notifyListeners(); }
   void setAuto(bool v) { autoRefresh = v; _p.setBool('auto', v); _schedule(); notifyListeners(); }
 
   void addAlert(AlertRule a) { alerts.add(a); _saveAlerts(); notifyListeners(); }
