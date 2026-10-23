@@ -20,7 +20,8 @@ class PricesScreen extends StatelessWidget {
           final others = currencies.where((c) => c.code != 'USD' && state.rate(c.code) != null).toList();
           final series = state.series('USD');
           final showSpark = series.length >= 2 && series.any((v) => v != series.first);
-          final bottom = MediaQuery.of(context).padding.bottom + 96;
+          // padding.bottom يشمل أصلاً ارتفاع شريط التنقل (extendBody)
+          final bottom = MediaQuery.of(context).padding.bottom + 12;
 
           return Padding(
             padding: EdgeInsets.fromLTRB(20, 20, 20, bottom),
@@ -55,6 +56,7 @@ class PricesScreen extends StatelessWidget {
                       padding: const EdgeInsetsDirectional.only(end: 24),
                       child: InkWell(
                         onTap: () => state.setSource(s),
+                        borderRadius: BorderRadius.circular(8),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
@@ -85,12 +87,13 @@ class PricesScreen extends StatelessWidget {
                   )
                 else ...[
                   InkWell(
+                    borderRadius: BorderRadius.circular(16),
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => DetailScreen(state: state, code: 'USD'))),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('الدولار الأمريكي · USD · عرض التفاصيل ‹',
+                        Text('الدولار الأمريكي · USD',
                             style: TextStyle(fontSize: 14, color: p.muted)),
                         const SizedBox(height: 2),
                         Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
@@ -105,7 +108,7 @@ class PricesScreen extends StatelessWidget {
                     ),
                   ),
                   if (showSpark) Spark(series, height: 48),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Expanded(
                     child: Panel(
                       child: Column(children: [
@@ -121,7 +124,7 @@ class PricesScreen extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 10),
+                    padding: const EdgeInsets.only(top: 12),
                     child: Text(
                       'قد تختلف الأسعار الفعلية من صراف لآخر.\nتجمع الأسعار من مصادر مختلفة.',
                       textAlign: TextAlign.center,
