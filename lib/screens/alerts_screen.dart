@@ -18,6 +18,28 @@ class AlertsScreen extends StatelessWidget {
             children: [
               const ScreenHeader(title: 'التنبيهات', subtitle: Text('أبلغني عند وصول السعر لهدفك')),
               const SizedBox(height: 22),
+              Panel(
+                child: Column(children: [
+                  _MoveRow(
+                    icon: Icons.trending_up_rounded,
+                    title: 'عند ارتفاع السعر',
+                    sub: 'أي عملة يرتفع سعرها عن آخر تحديث',
+                    value: state.notifyRise,
+                    onChanged: state.setRise,
+                    first: true,
+                  ),
+                  _MoveRow(
+                    icon: Icons.trending_down_rounded,
+                    title: 'عند نزول السعر',
+                    sub: 'أي عملة ينزل سعرها عن آخر تحديث',
+                    value: state.notifyFall,
+                    onChanged: state.setFall,
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 18),
+              Text('تنبيهات بسعر محدد', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: p.muted)),
+              const SizedBox(height: 10),
               if (state.alerts.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 32),
@@ -116,8 +138,8 @@ Future<void> showAlertDialogFor(BuildContext context, AppState state, {String co
           const SizedBox(height: 12),
           SegmentedButton<bool>(
             segments: const [
-              ButtonSegment(value: true, label: Text('يصل أو يفوق')),
-              ButtonSegment(value: false, label: Text('ينزل إلى')),
+              ButtonSegment(value: true, label: Text('عند الارتفاع إلى')),
+              ButtonSegment(value: false, label: Text('عند النزول إلى')),
             ],
             selected: {above},
             onSelectionChanged: (v) => setS(() => above = v.first),
@@ -148,4 +170,40 @@ Future<void> showAlertDialogFor(BuildContext context, AppState state, {String co
       ),
     ),
   );
+}
+
+class _MoveRow extends StatelessWidget {
+  final IconData icon;
+  final String title, sub;
+  final bool value, first;
+  final ValueChanged<bool> onChanged;
+  const _MoveRow({
+    required this.icon, required this.title, required this.sub,
+    required this.value, required this.onChanged, this.first = false,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final p = Pal.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: first ? Colors.transparent : p.divider)),
+      ),
+      child: Row(children: [
+        Container(
+          width: 40, height: 40,
+          decoration: BoxDecoration(color: p.tile, borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: p.tileText),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+            Text(sub, style: TextStyle(fontSize: 12, color: p.muted)),
+          ]),
+        ),
+        Switch(value: value, onChanged: onChanged, activeColor: Colors.white, activeTrackColor: Pal.coral),
+      ]),
+    );
+  }
 }

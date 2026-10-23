@@ -17,13 +17,15 @@ class PricesScreen extends StatelessWidget {
           final p = Pal.of(context);
           final isDark = Theme.of(context).brightness == Brightness.dark;
           final usd = state.rate('USD');
-          final others = currencies.where((c) => c.code != 'USD');
-          return RefreshIndicator(
-            onRefresh: state.refresh,
-            color: Pal.coral,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
-              physics: const AlwaysScrollableScrollPhysics(),
+          final others = currencies.where((c) => c.code != 'USD' && state.rate(c.code) != null).toList();
+          final series = state.series('USD');
+          final showSpark = series.length >= 2 && series.any((v) => v != series.first);
+          final bottom = MediaQuery.of(context).padding.bottom + 96;
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, bottom),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ScreenHeader(
                   title: 'الأسعار',
@@ -46,7 +48,7 @@ class PricesScreen extends StatelessWidget {
                     onTap: () => state.toggleTheme(isDark),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 Row(children: [
                   for (final s in RateSource.values)
                     Padding(
@@ -54,7 +56,7 @@ class PricesScreen extends StatelessWidget {
                       child: InkWell(
                         onTap: () => state.setSource(s),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
                             border: Border(
                               bottom: BorderSide(
@@ -75,22 +77,18 @@ class PricesScreen extends StatelessWidget {
                 ]),
                 if (state.error != null)
                   Padding(
-                    padding: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.only(top: 8),
                     child: Panel(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       child: Row(children: [
-                        Expanded(child: Text(state.error!, style: TextStyle(color: p.muted))),
+                        Expanded(child: Text(state.error!, style: TextStyle(fontSize: 13, color: p.muted))),
                         TextButton(onPressed: state.refresh, child: const Text('إعادة المحاولة')),
                       ]),
                     ),
                   ),
-                if (usd == null && state.error == null)
-                  const Padding(
-                    padding: EdgeInsets.all(48),
-                    child: Center(child: CircularProgressIndicator(color: Pal.coral)),
-                  ),
-                if (usd != null) ...[
-                  const SizedBox(height: 16),
+                if (usd == null)
+                  const Expanded(child: Center(child: CircularProgressIndicator(color: Pal.coral)))
+                else ...[
                   InkWell(
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => DetailScreen(state: state, code: 'USD'))),
@@ -99,36 +97,32 @@ class PricesScreen extends StatelessWidget {
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text('الدولار الأمريكي · USD · عرض التفاصيل ‹',
                             style: TextStyle(fontSize: 14, color: p.muted)),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
                           Num(fmt(usd.value(state.source)),
-                              style: const TextStyle(fontSize: 56, fontWeight: FontWeight.w700, height: 1)),
+                              style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w700, height: 1.1)),
                           const SizedBox(width: 8),
                           Text('ج.س', style: TextStyle(fontSize: 16, color: p.muted)),
                         ]),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 6),
                         Row(children: [_DeltaChip(usd, state.source)]),
                       ]),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Spark(state.series('USD')),
-                  const SizedBox(height: 12),
-                  Panel(
-                    child: Column(children: [
-                      for (final c in others)
-                        if (state.rate(c.code) != null)
-                          _Row(c, state.rate(c.code)!, state.source, isLast: c == others.last, onTap: () {
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => DetailScreen(state: state, code: c.code)));
-                          }),
-                    ]),
-                  ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Text(
-                      state.snapshot == null ? '' : 'آخر تحديث ${_ago(state.snapshot!.fetchedAt)} · المصدر status.sd',
-                      style: TextStyle(fontSize: 12, color: p.muted),
+                  if (showSpark) Spark(series, height: 48),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Panel(
+                      child: Column(children: [
+                        for (var i = 0; i < others.length; i++)
+                          Expanded(
+                            child: _Row(others[i], state.rate(others[i].code)!, state.source,
+                                isLast: i == others.length - 1, onTap: () {
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (_) => DetailScreen(state: state, code: others[i].code)));
+                            }),
+                          ),
+                      ]),
                     ),
                   ),
                 ],
@@ -139,13 +133,6 @@ class PricesScreen extends StatelessWidget {
       );
 }
 
-String _ago(DateTime t) {
-  final d = DateTime.now().difference(t);
-  if (d.inSeconds < 60) return 'الآن';
-  if (d.inMinutes < 60) return 'منذ ${d.inMinutes} دقيقة';
-  return 'منذ ${d.inHours} ساعة';
-}
-
 class _DeltaChip extends StatelessWidget {
   final Rate r;
   final RateSource s;
@@ -153,8 +140,7 @@ class _DeltaChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final d = r.deltaPct(s);
-    final txt = '${d >= 0 ? '+' : ''}${d.toStringAsFixed(1)}% عن ${s == RateSource.parallel ? 'البنك' : 'الموازي'}';
-    return CoralChip(txt);
+    return CoralChip('${d >= 0 ? '+' : ''}${d.toStringAsFixed(1)}% عن ${s == RateSource.parallel ? 'البنك' : 'الموازي'}');
   }
 }
 
@@ -171,7 +157,7 @@ class _Row extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        height: 64,
+        alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: isLast ? Colors.transparent : p.divider)),

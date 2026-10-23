@@ -89,8 +89,7 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Panel(
                 child: Column(children: [
-                  row('المصدر', Text('status.sd', style: TextStyle(fontSize: 14, color: p.muted)), first: true),
-                  row('الإصدار', Num('v1.0', style: TextStyle(fontSize: 14, color: p.muted))),
+                  row('الإصدار', Num('v1.0', style: TextStyle(fontSize: 14, color: p.muted)), first: true),
                 ]),
               ),
             ],
