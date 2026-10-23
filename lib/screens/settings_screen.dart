@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../models.dart';
+import '../notifications.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
@@ -13,14 +14,19 @@ class SettingsScreen extends StatelessWidget {
         listenable: state,
         builder: (context, _) {
           final p = Pal.of(context);
-          Widget row(String label, Widget trailing, {bool first = false}) => Container(
-                height: 60,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+          Widget row(String label, Widget trailing, {bool first = false, String? sub}) => Container(
+                constraints: const BoxConstraints(minHeight: 60),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   border: Border(top: BorderSide(color: first ? Colors.transparent : p.divider)),
                 ),
                 child: Row(children: [
-                  Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                      if (sub != null) Text(sub, style: TextStyle(fontSize: 12, color: p.muted)),
+                    ]),
+                  ),
                   trailing,
                 ]),
               );
@@ -58,6 +64,33 @@ class SettingsScreen extends StatelessWidget {
             children: [
               const ScreenHeader(title: 'الإعدادات', subtitle: Text('خصّص التطبيق')),
               const SizedBox(height: 22),
+              Text('تنبيهات الأسعار', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: p.muted)),
+              const SizedBox(height: 10),
+              Panel(
+                child: Column(children: [
+                  row('تنبيه عند ارتفاع السعر', sw(state.notifyRise, state.setRise),
+                      first: true, sub: 'إشعار عند ارتفاع أي عملة'),
+                  row('تنبيه عند نزول السعر', sw(state.notifyFall, state.setFall),
+                      sub: 'إشعار عند نزول أي عملة'),
+                  row(
+                    'تجربة الإشعار',
+                    TextButton(
+                      onPressed: () async {
+                        await Notifier.requestPermission();
+                        await Notifier.show('تجربة الإشعار', 'هكذا ستظهر تنبيهات الأسعار');
+                      },
+                      child: Text('إرسال', style: TextStyle(color: p.tileText, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'تصلك الإشعارات حتى والتطبيق مغلق (فحص كل 15 دقيقة تقريباً على أندرويد). '
+                'المقارنة تتم بحسب المصدر الافتراضي أدناه.',
+                style: TextStyle(fontSize: 12, height: 1.5, color: p.muted),
+              ),
+              const SizedBox(height: 18),
               Panel(
                 child: Column(children: [
                   row(
@@ -84,12 +117,7 @@ class SettingsScreen extends StatelessWidget {
                         ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Pal.coral))
                         : IconButton(onPressed: state.refresh, icon: Icon(Icons.refresh_rounded, color: p.muted)),
                   ),
-                ]),
-              ),
-              const SizedBox(height: 12),
-              Panel(
-                child: Column(children: [
-                  row('الإصدار', Num('v1.0', style: TextStyle(fontSize: 14, color: p.muted)), first: true),
+                  row('الإصدار', Num('v1.0', style: TextStyle(fontSize: 14, color: p.muted))),
                 ]),
               ),
             ],

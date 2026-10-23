@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../widgets.dart';
-import 'alerts_screen.dart';
 import 'converter_screen.dart';
 import 'prices_screen.dart';
 import 'settings_screen.dart';
@@ -25,7 +24,6 @@ class _ShellState extends State<Shell> {
         child: IndexedStack(index: tab, children: [
           PricesScreen(state: s, onOpenConverter: () => setState(() => tab = 1)),
           ConverterScreen(state: s),
-          AlertsScreen(state: s),
           SettingsScreen(state: s),
         ]),
       ),

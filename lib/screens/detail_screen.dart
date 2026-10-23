@@ -3,7 +3,6 @@ import '../app_state.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets.dart';
-import 'alerts_screen.dart';
 
 class DetailScreen extends StatelessWidget {
   final AppState state;
@@ -87,20 +86,6 @@ class DetailScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(child: _Stat('سعر البنك', fmt(r.bank))),
                     ]),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 56,
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Pal.coral,
-                          foregroundColor: const Color(0xFF14102B),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                        ),
-                        onPressed: () => showAlertDialogFor(context, state, code: code),
-                        child: const Text('أنشئ تنبيه لهذا السعر'),
-                      ),
-                    ),
                   ],
                 ],
               ),

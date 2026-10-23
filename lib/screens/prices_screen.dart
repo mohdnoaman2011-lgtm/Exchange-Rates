@@ -75,19 +75,14 @@ class PricesScreen extends StatelessWidget {
                       ),
                     ),
                 ]),
-                if (state.error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Panel(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      child: Row(children: [
-                        Expanded(child: Text(state.error!, style: TextStyle(fontSize: 13, color: p.muted))),
-                        TextButton(onPressed: state.refresh, child: const Text('إعادة المحاولة')),
-                      ]),
-                    ),
-                  ),
                 if (usd == null)
-                  const Expanded(child: Center(child: CircularProgressIndicator(color: Pal.coral)))
+                  Expanded(
+                    child: Center(
+                      child: state.error != null
+                          ? TextButton(onPressed: state.refresh, child: const Text('إعادة المحاولة'))
+                          : const CircularProgressIndicator(color: Pal.coral),
+                    ),
+                  )
                 else ...[
                   InkWell(
                     onTap: () => Navigator.push(context,
@@ -123,6 +118,14 @@ class PricesScreen extends StatelessWidget {
                             }),
                           ),
                       ]),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      'قد تختلف الأسعار الفعلية من صراف لآخر.\nتجمع الأسعار من مصادر مختلفة.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, height: 1.5, color: p.muted),
                     ),
                   ),
                 ],
