@@ -20,7 +20,7 @@ class Notifier {
   static Future<void> init() async {
     if (_ready) return;
     await _plugin.initialize(const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: AndroidInitializationSettings('ic_stat'),
     ));
     _ready = true;
   }
@@ -42,6 +42,7 @@ class Notifier {
           'price_moves',
           'حركة الأسعار',
           channelDescription: 'إشعارات ارتفاع ونزول الأسعار',
+          icon: 'ic_stat',
           importance: Importance.high,
           priority: Priority.high,
           styleInformation: BigTextStyleInformation(body),

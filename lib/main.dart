@@ -7,6 +7,7 @@ import 'app_state.dart';
 import 'notifications.dart';
 import 'theme.dart';
 import 'screens/shell.dart';
+import 'splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +40,7 @@ class RatesApp extends StatelessWidget {
           themeMode: state.themeMode,
           theme: buildTheme(Brightness.light),
           darkTheme: buildTheme(Brightness.dark),
-          home: Shell(state: state),
+          home: SplashScreen(next: Shell(state: state)),
         ),
       );
 }
