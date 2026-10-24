@@ -3,7 +3,6 @@ import '../app_state.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets.dart';
-import 'detail_screen.dart';
 
 class PricesScreen extends StatelessWidget {
   final AppState state;
@@ -86,11 +85,7 @@ class PricesScreen extends StatelessWidget {
                     ),
                   )
                 else ...[
-                  InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => DetailScreen(state: state, code: 'USD'))),
-                    child: Padding(
+                  Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text('الدولار الأمريكي · USD',
