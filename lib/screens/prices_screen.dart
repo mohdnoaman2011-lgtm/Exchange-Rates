@@ -3,6 +3,7 @@ import '../app_state.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'detail_screen.dart';
 
 class PricesScreen extends StatelessWidget {
   final AppState state;
@@ -85,20 +86,26 @@ class PricesScreen extends StatelessWidget {
                     ),
                   )
                 else ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('الدولار الأمريكي · USD', style: TextStyle(fontSize: 14, color: p.muted)),
-                      const SizedBox(height: 2),
-                      Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-                        Num(fmt(usd.value(state.source)),
-                            style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w700, height: 1.1)),
-                        const SizedBox(width: 8),
-                        Text('ج.س', style: TextStyle(fontSize: 16, color: p.muted)),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => DetailScreen(state: state, code: 'USD'))),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('الدولار الأمريكي · USD',
+                            style: TextStyle(fontSize: 14, color: p.muted)),
+                        const SizedBox(height: 2),
+                        Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+                          Num(fmt(usd.value(state.source)),
+                              style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w700, height: 1.1)),
+                          const SizedBox(width: 8),
+                          Text('ج.س', style: TextStyle(fontSize: 16, color: p.muted)),
+                        ]),
+                        const SizedBox(height: 6),
+                        Row(children: [_DeltaChip(usd, state.source)]),
                       ]),
-                      const SizedBox(height: 6),
-                      Row(children: [_DeltaChip(usd, state.source)]),
-                    ]),
+                    ),
                   ),
                   if (showSpark) Spark(series, height: 48),
                   const SizedBox(height: 12),
@@ -108,7 +115,10 @@ class PricesScreen extends StatelessWidget {
                         for (var i = 0; i < others.length; i++)
                           Expanded(
                             child: _Row(others[i], state.rate(others[i].code)!, state.source,
-                                isLast: i == others.length - 1),
+                                isLast: i == others.length - 1, onTap: () {
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (_) => DetailScreen(state: state, code: others[i].code)));
+                            }),
                           ),
                       ]),
                     ),
@@ -145,22 +155,26 @@ class _Row extends StatelessWidget {
   final Rate r;
   final RateSource s;
   final bool isLast;
-  const _Row(this.c, this.r, this.s, {required this.isLast});
+  final VoidCallback onTap;
+  const _Row(this.c, this.r, this.s, {required this.isLast, required this.onTap});
   @override
   Widget build(BuildContext context) {
     final p = Pal.of(context);
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: isLast ? Colors.transparent : p.divider)),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: isLast ? Colors.transparent : p.divider)),
+        ),
+        child: Row(children: [
+          CodeTile(c.code),
+          const SizedBox(width: 12),
+          Expanded(child: Text(c.nameAr, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))),
+          Num(fmt(r.value(s)), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+        ]),
       ),
-      child: Row(children: [
-        CodeTile(c.code),
-        const SizedBox(width: 12),
-        Expanded(child: Text(c.nameAr, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))),
-        Num(fmt(r.value(s)), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-      ]),
     );
   }
 }
