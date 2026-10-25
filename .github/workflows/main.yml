@@ -24,7 +24,7 @@ jobs:
       - name: Generate android folder if missing
         run: |
           if [ ! -d android ]; then
-            flutter create --org sd.rates --project-name sudan_rates .
+            flutter create --org sd.rates --project-name Exchange_Rates .
           fi
 
       - name: Android setup (permissions + desugaring + notification icon)
