@@ -3,6 +3,9 @@ import '../app_state.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'converter_box.dart';
+import 'converter_keypad.dart';
+import 'converter_parts.dart';
 
 class ConverterScreen extends StatefulWidget {
   final AppState state;
@@ -51,7 +54,6 @@ class _ConverterScreenState extends State<ConverterScreen> {
           final bottom = MediaQuery.of(context).padding.bottom + 12;
 
           return LayoutBuilder(builder: (context, box) {
-            // ارتفاع العناصر الثابتة: الترويسة + الشرائح + البطاقتان + الفراغات
             const fixedTop = 40 + 16 + 44 + 16 + _amountH + 8 + _resultH + 12;
             final avail = box.maxHeight - 20 - bottom;
             final double keyH = ((avail - fixedTop) / 4).clamp(52.0, 84.0).toDouble();
@@ -61,34 +63,7 @@ class _ConverterScreenState extends State<ConverterScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 ScreenHeader(title: 'المحوّل', subtitle: const SizedBox.shrink()),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 44,
-                  child: ListView(scrollDirection: Axis.horizontal, children: [
-                    for (final c in currencies)
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 8),
-                        child: InkWell(
-                          onTap: () => setState(() => code = c.code),
-                          borderRadius: BorderRadius.circular(14),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 18),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: code == c.code ? Pal.coral : Colors.transparent,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: code == c.code ? Pal.coral : p.border),
-                            ),
-                            child: Text(c.code,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: code == c.code ? FontWeight.w700 : FontWeight.w500,
-                                  color: code == c.code ? const Color(0xFF14102B) : p.muted,
-                                )),
-                          ),
-                        ),
-                      ),
-                  ]),
-                ),
+                CurrencyChips(code: code, onSelect: (c) => setState(() => code = c)),
                 const SizedBox(height: 16),
                 SizedBox(
                   height: _amountH + 8 + _resultH,
@@ -98,7 +73,7 @@ class _ConverterScreenState extends State<ConverterScreen> {
                         height: _amountH,
                         child: Panel(
                           padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                          child: _Box('المبلغ', toSdg ? code : 'SDG', _shown(input), p.ink, p.muted, p.ink),
+                          child: ConverterBox('المبلغ', toSdg ? code : 'SDG', _shown(input), p.ink, p.muted, p.ink),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -106,11 +81,13 @@ class _ConverterScreenState extends State<ConverterScreen> {
                         height: _resultH,
                         padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                         decoration: BoxDecoration(color: p.tile, borderRadius: BorderRadius.circular(24)),
-                        child: _Box(
+                        child: ConverterBox(
                           'النتيجة',
                           toSdg ? 'SDG' : code,
                           result == null ? '—' : fmt(result, toSdg ? 0 : 2),
-                          p.tileText, p.muted, p.tileText,
+                          p.tileText,
+                          p.muted,
+                          p.tileText,
                           footer: rate == null ? null : '1 $code = ${fmt(rate)} SDG',
                         ),
                       ),
@@ -119,7 +96,15 @@ class _ConverterScreenState extends State<ConverterScreen> {
                       top: _amountH + 4 - 22,
                       left: 0,
                       right: 0,
-                      child: Center(
-                        child: Semantics(
-                          button: true,
-                          label: '
+                      child: Center(child: SwapButton(onTap: () => setState(() => toSdg = !toSdg))),
+                    ),
+                  ]),
+                ),
+                const SizedBox(height: 12),
+                Keypad(keyH: keyH, onKey: _key),
+              ]),
+            );
+          });
+        },
+      );
+}
