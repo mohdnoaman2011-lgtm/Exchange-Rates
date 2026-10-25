@@ -47,20 +47,19 @@ class _ConverterScreenState extends State<ConverterScreen> {
           final rate = st.rate(code)?.value(st.source);
           final amount = double.tryParse(input) ?? 0;
           final result = rate == null ? null : (toSdg ? amount * rate : amount / rate);
-          final srcLabel = st.source == RateSource.parallel ? 'السوق الموازي' : 'سعر البنك';
           // padding.bottom يشمل أصلاً ارتفاع شريط التنقل (extendBody)
           final bottom = MediaQuery.of(context).padding.bottom + 12;
 
           return LayoutBuilder(builder: (context, box) {
             // ارتفاع العناصر الثابتة: الترويسة + الشرائح + البطاقتان + الفراغات
-            const fixedTop = 60 + 16 + 44 + 16 + _amountH + 8 + _resultH + 12;
+            const fixedTop = 40 + 16 + 44 + 16 + _amountH + 8 + _resultH + 12;
             final avail = box.maxHeight - 20 - bottom;
             final double keyH = ((avail - fixedTop) / 4).clamp(52.0, 84.0).toDouble();
 
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(20, 20, 20, bottom),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                ScreenHeader(title: 'المحوّل', subtitle: Text('$srcLabel · اضغط للتبديل')),
+                ScreenHeader(title: 'المحوّل', subtitle: const SizedBox.shrink()),
                 const SizedBox(height: 16),
                 SizedBox(
                   height: 44,
@@ -123,96 +122,4 @@ class _ConverterScreenState extends State<ConverterScreen> {
                       child: Center(
                         child: Semantics(
                           button: true,
-                          label: 'تبديل الاتجاه',
-                          child: InkWell(
-                            onTap: () => setState(() => toSdg = !toSdg),
-                            borderRadius: BorderRadius.circular(14),
-                            child: Container(
-                              width: 44, height: 44,
-                              decoration: BoxDecoration(
-                                color: Pal.coral,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: p.bg, width: 4),
-                              ),
-                              child: const Icon(Icons.swap_vert_rounded, color: Color(0xFF14102B)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ]),
-                ),
-                const SizedBox(height: 12),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Column(children: [
-                    for (final row in const [
-                      ['1', '2', '3'],
-                      ['4', '5', '6'],
-                      ['7', '8', '9'],
-                      ['.', '0', '⌫'],
-                    ])
-                      SizedBox(
-                        height: keyH,
-                        child: Row(children: [
-                          for (final k in row)
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: InkWell(
-                                  onTap: () => _key(k),
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: p.card,
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: p.border),
-                                    ),
-                                    child: k == '⌫'
-                                        ? Icon(Icons.backspace_outlined, color: p.ink)
-                                        : Text(k, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500)),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ]),
-                      ),
-                  ]),
-                ),
-              ]),
-            );
-          });
-        },
-      );
-}
-
-class _Box extends StatelessWidget {
-  final String label, cur, value;
-  final Color valueColor, muted, curColor;
-  final String? footer;
-  const _Box(this.label, this.cur, this.value, this.valueColor, this.muted, this.curColor, {this.footer});
-  @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(label, style: TextStyle(fontSize: 13, color: muted)),
-            Num(cur, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: curColor)),
-          ]),
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Num(value, style: TextStyle(fontSize: 44, fontWeight: FontWeight.w700, height: 1, color: valueColor)),
-            ),
-          ),
-          if (footer != null)
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: Num(footer!, style: TextStyle(fontSize: 13, color: muted)),
-            ),
-        ],
-      );
-}
+                          label: '
