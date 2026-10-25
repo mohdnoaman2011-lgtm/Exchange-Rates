@@ -16,6 +16,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_local_notifications: ^17.2.4
   workmanager: ^0.10.0
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.3
