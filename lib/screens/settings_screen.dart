@@ -4,6 +4,7 @@ import '../models.dart';
 import '../notifications.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'settings_parts.dart';
 
 class SettingsScreen extends StatelessWidget {
   final AppState state;
@@ -14,67 +15,30 @@ class SettingsScreen extends StatelessWidget {
         listenable: state,
         builder: (context, _) {
           final p = Pal.of(context);
-          Widget row(String label, Widget trailing, {bool first = false, String? sub}) => Container(
-                constraints: const BoxConstraints(minHeight: 60),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: first ? Colors.transparent : p.divider)),
-                ),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                      if (sub != null) Text(sub, style: TextStyle(fontSize: 12, color: p.muted)),
-                    ]),
-                  ),
-                  trailing,
-                ]),
-              );
-          Widget seg<T>(T value, List<(T, String)> items, ValueChanged<T> on) => Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(color: p.tile, borderRadius: BorderRadius.circular(12)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  for (final (v, l) in items)
-                    InkWell(
-                      onTap: () => on(v),
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        height: 34,
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: v == value ? Pal.coral : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(l,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: v == value ? FontWeight.w700 : FontWeight.w500,
-                              color: v == value ? const Color(0xFF14102B) : p.muted,
-                            )),
-                      ),
-                    ),
-                ]),
-              );
-          Widget sw(bool v, ValueChanged<bool> on) =>
-              Switch(value: v, onChanged: on, activeColor: Colors.white, activeTrackColor: Pal.coral);
+          // padding.bottom يشمل أصلاً ارتفاع شريط التنقل (extendBody)
+          final bottom = MediaQuery.of(context).padding.bottom + 12;
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+            padding: EdgeInsets.fromLTRB(20, 20, 20, bottom),
             children: [
               const ScreenHeader(title: 'الإعدادات', subtitle: Text('خصّص التطبيق')),
-              const SizedBox(height: 22),
-              Text('تنبيهات الأسعار', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: p.muted)),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
+              Text('تنبيهات الأسعار',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: p.muted)),
+              const SizedBox(height: 8),
               Panel(
                 child: Column(children: [
-                  row('تنبيه عند ارتفاع السعر', sw(state.notifyRise, state.setRise),
+                  SettingsRow('تنبيه عند ارتفاع السعر', AppSwitch(state.notifyRise, state.setRise),
                       first: true, sub: 'إشعار عند ارتفاع أي عملة'),
-                  row('تنبيه عند نزول السعر', sw(state.notifyFall, state.setFall),
+                  SettingsRow('تنبيه عند نزول السعر', AppSwitch(state.notifyFall, state.setFall),
                       sub: 'إشعار عند نزول أي عملة'),
-                  row(
+                  SettingsRow(
                     'تجربة الإشعار',
                     TextButton(
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(48, 36),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                       onPressed: () async {
                         await Notifier.requestPermission();
                         await Notifier.show('تجربة الإشعار', 'هكذا ستظهر تنبيهات الأسعار');
@@ -84,40 +48,55 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ]),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'تصلك الإشعارات حتى والتطبيق مغلق (فحص كل 15 دقيقة تقريباً على أندرويد). '
-                'المقارنة تتم بحسب المصدر الافتراضي أدناه.',
-                style: TextStyle(fontSize: 12, height: 1.5, color: p.muted),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+                child: Text(
+                  'تصلك الإشعارات والتطبيق مغلق (فحص كل 15 دقيقة تقريباً على أندرويد)، وتُقارن بحسب المصدر الافتراضي.',
+                  style: TextStyle(fontSize: 12, height: 1.5, color: p.muted),
+                ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               Panel(
                 child: Column(children: [
-                  row(
+                  SettingsRow(
                     'المظهر',
-                    seg<ThemeMode>(
-                      state.themeMode == ThemeMode.light ? ThemeMode.light : ThemeMode.dark,
-                      const [(ThemeMode.dark, 'داكن'), (ThemeMode.light, 'فاتح')],
-                      state.setTheme,
+                    SegControl<ThemeMode>(
+                      value: state.themeMode == ThemeMode.light ? ThemeMode.light : ThemeMode.dark,
+                      items: const [(ThemeMode.dark, 'داكن'), (ThemeMode.light, 'فاتح')],
+                      onChanged: state.setTheme,
                     ),
                     first: true,
                   ),
-                  row(
+                  SettingsRow(
                     'المصدر الافتراضي',
-                    seg<RateSource>(
-                      state.source,
-                      const [(RateSource.parallel, 'موازي'), (RateSource.bank, 'بنك')],
-                      state.setSource,
+                    SegControl<RateSource>(
+                      value: state.source,
+                      items: const [(RateSource.parallel, 'موازي'), (RateSource.bank, 'بنك')],
+                      onChanged: state.setSource,
                     ),
                   ),
-                  row('التحديث التلقائي', sw(state.autoRefresh, state.setAuto)),
-                  row(
-                    'تحديث الآن',
-                    state.loading
-                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Pal.coral))
-                        : IconButton(onPressed: state.refresh, icon: Icon(Icons.refresh_rounded, color: p.muted)),
+                  SettingsRow(
+                    'التحديث التلقائي',
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      state.loading
+                          ? const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Pal.accent),
+                              ),
+                            )
+                          : IconButton(
+                              tooltip: 'تحديث الآن',
+                              onPressed: state.refresh,
+                              icon: Icon(Icons.refresh_rounded, color: p.muted),
+                            ),
+                      AppSwitch(state.autoRefresh, state.setAuto),
+                    ]),
+                    sub: 'كل دقيقة أثناء فتح التطبيق',
                   ),
-                  row('الإصدار', Num('v1.0', style: TextStyle(fontSize: 14, color: p.muted))),
+                  const SettingsRow('الإصدار', VersionText()),
                 ]),
               ),
             ],
