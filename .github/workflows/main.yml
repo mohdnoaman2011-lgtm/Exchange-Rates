@@ -24,8 +24,12 @@ jobs:
       - name: Generate android folder if missing
         run: |
           if [ ! -d android ]; then
-            flutter create --org sd.rates --project-name Exchange_Rates .
+            flutter create --org sd.rates --project-name exchange_rates .
           fi
+
+      - name: Set app display name
+        run: |
+          sed -i 's|android:label="[^"]*"|android:label="Exchange Rates"|' android/app/src/main/AndroidManifest.xml
 
       - name: Android setup (permissions + desugaring + notification icon)
         run: python3 tool/android_setup.py
@@ -39,5 +43,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Exchange_Rates-apk
+          name: exchange-rates-apk
           path: build/app/outputs/flutter-apk/app-release.apk
