@@ -33,7 +33,7 @@ class CurrencyChips extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: code == c.code ? FontWeight.w700 : FontWeight.w500,
-                      color: code == c.code ? const Color(0xFF14102B) : p.muted,
+                      color: code == c.code ? const Color(0xFF002463) : p.muted,
                     )),
               ),
             ),
@@ -61,11 +61,11 @@ class SwapButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Pal.coral,
+            color: Pal.gold,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: p.bg, width: 4),
           ),
-          child: const Icon(Icons.swap_vert_rounded, color: Color(0xFF14102B)),
+          child: const Icon(Icons.swap_vert_rounded, color: Color(0xFF002463)),
         ),
       ),
     );
