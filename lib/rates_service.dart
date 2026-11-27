@@ -4,14 +4,14 @@ import 'models.dart';
 
 /// يجلب الأسعار من status.sd
 ///
-/// 1) إن وُجد رابط JSON يمرَّر عند التشغيل:
-///    flutter run --dart-define=RATES_JSON_URL=https://...
-///    بالشكل {"USD":{"parallel":10386,"bank":4886.38}, ...}
-///    (أو داخل مفتاح "rates")
-/// 2) وإلا تُقرأ الأسعار من الصفحة الرئيسية https://status.sd
+/// 1) الـ API الرسمي (الأساسي): GET /api/open/v1/currency مع الهيدر X-API-Key
+///    يمرَّر المفتاح عند البناء ولا يُكتب داخل الكود:
+///    flutter build apk --dart-define=STATUS_API_KEY=sk_live_xxx
+/// 2) احتياطي: قراءة الأسعار من الصفحة الرئيسية https://status.sd
 class RatesService {
   static const pageUrl = 'https://status.sd';
-  static const jsonUrl = String.fromEnvironment('RATES_JSON_URL');
+  static const apiUrl = 'https://status.sd/api/open/v1/currency';
+  static const apiKey = String.fromEnvironment('STATUS_API_KEY');
 
   // أسماء العملات كما تظهر في status.sd (بعد توحيد الهمزات)
   static const _names = {
@@ -29,9 +29,9 @@ class RatesService {
   };
 
   Future<RatesSnapshot> fetch() async {
-    if (jsonUrl.isNotEmpty) {
+    if (apiKey.isNotEmpty) {
       try {
-        return await _fromJson();
+        return await _fromApi();
       } catch (_) {/* نرجع للصفحة */}
     }
     final res = await http
@@ -41,22 +41,66 @@ class RatesService {
     return parseHtml(utf8.decode(res.bodyBytes));
   }
 
-  Future<RatesSnapshot> _fromJson() async {
-    final res = await http
-        .get(Uri.parse(jsonUrl), headers: _headers)
-        .timeout(const Duration(seconds: 15));
+  Future<RatesSnapshot> _fromApi() async {
+    final res = await http.get(Uri.parse(apiUrl), headers: {
+      'X-API-Key': apiKey,
+      'Accept': 'application/json',
+    }).timeout(const Duration(seconds: 15));
     if (res.statusCode != 200) throw Exception('HTTP ${res.statusCode}');
-    final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
-    final root = (data['rates'] ?? data) as Map<String, dynamic>;
-    final rates = <String, Rate>{};
-    for (final c in currencies) {
-      final r = root[c.code];
-      if (r is Map) {
-        rates[c.code] = Rate(c.code, (r['parallel'] as num).toDouble(), (r['bank'] as num).toDouble());
+    return parseApi(jsonDecode(utf8.decode(res.bodyBytes)));
+  }
+
+  static const _codeKeys = ['code', 'currency', 'currency_code', 'symbol', 'iso'];
+  static const _parallelKeys = ['parallel', 'parallel_rate', 'market', 'black_market', 'sell'];
+  static const _bankKeys = ['bank', 'bank_rate', 'official', 'official_rate'];
+
+  /// يقبل عدة أشكال للـ JSON: قائمة، أو {"data":[...]}، أو {"USD":{...}}
+  static RatesSnapshot parseApi(dynamic data) {
+    dynamic root = data;
+    if (root is Map) {
+      for (final k in ['data', 'rates', 'currencies', 'result']) {
+        if (root[k] != null) {
+          root = root[k];
+          break;
+        }
       }
     }
-    if (rates.isEmpty) throw const FormatException('JSON فارغ');
+    final items = <String, Map>{};
+    if (root is List) {
+      for (final e in root) {
+        if (e is Map) {
+          final c = _pick(e, _codeKeys);
+          if (c != null) items[c.toString().toUpperCase()] = e;
+        }
+      }
+    } else if (root is Map) {
+      root.forEach((k, v) {
+        if (v is Map) items[k.toString().toUpperCase()] = v;
+      });
+    }
+    final rates = <String, Rate>{};
+    for (final c in currencies) {
+      final e = items[c.code];
+      if (e == null) continue;
+      final p = _toDouble(_pick(e, _parallelKeys));
+      final b = _toDouble(_pick(e, _bankKeys));
+      if (p != null && b != null) rates[c.code] = Rate(c.code, p, b);
+    }
+    if (rates.isEmpty) throw const FormatException('تعذر قراءة استجابة الـ API');
     return RatesSnapshot(rates, DateTime.now());
+  }
+
+  static dynamic _pick(Map m, List<String> keys) {
+    for (final k in keys) {
+      if (m[k] != null) return m[k];
+    }
+    return null;
+  }
+
+  static double? _toDouble(dynamic v) {
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v.replaceAll(',', ''));
+    return null;
   }
 
   /// يستخرج الأسعار من نص الصفحة: «الدولار الامريكي $ · موازي 10,386 · بنك 4,886.38»
